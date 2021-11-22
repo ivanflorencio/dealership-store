@@ -12,19 +12,27 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 import os
 from pathlib import Path
+import json
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+with open(os.path.join(BASE_DIR, 'secrets.json')) as secrets_file:
+    secrets = json.load(secrets_file)
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
+def get_secret(setting, secrets=secrets):
+    """Get secret setting or fail with ImproperlyConfigured"""
+    try:
+        return secrets[setting]
+    except KeyError:
+        raise ImproperlyConfigured("Set the {} setting".format(setting))
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-3j^228=8+&3helq_3$a1en75-_u-^a83pa&2o+!9ypz%#r037='
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
+SECRET_KEY = get_secret("SECRET_KEY")
 
 ALLOWED_HOSTS=['*']
 CORS_ORIGIN_ALLOW_ALL = True
@@ -83,17 +91,17 @@ WSGI_APPLICATION = 'dealership.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'dealershipdb',
-        'USER': 'postgres',
-        'PASSWORD': '123456',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'NAME': get_secret('DB_NAME'),
+        'USER': get_secret('DB_USER'),
+        'PASSWORD': get_secret('DB_PASSWORD'),
+        'HOST': get_secret('DB_HOST'),
+        'PORT': get_secret('DB_PORT'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
